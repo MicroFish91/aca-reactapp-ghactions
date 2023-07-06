@@ -1,0 +1,42 @@
+name: Trigger auto deployment for mwf-dev2
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/mwf-dev2-AutoDeployTrigger-f7ed79d2-27e8-471b-b6dc-5b7a47384157.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.MWFDEV2_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: workingacr.azurecr.io
+          registryUsername: ${{ secrets.MWFDEV2_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.MWFDEV2_REGISTRY_PASSWORD }}
+          containerAppName: mwf-dev2
+          resourceGroup: test-environment
+          imageToBuild: workingacr.azurecr.io/containerappsreactapptestz:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
